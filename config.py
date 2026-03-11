@@ -6,9 +6,9 @@ import os
 from pathlib import Path
 
 # Application Information
-APP_NAME = "수학 오답노트"
+APP_NAME = "Q-Bank"
 APP_VERSION = "1.0.0"
-APP_AUTHOR = "Math Program"
+APP_AUTHOR = "Q-Bank"
 
 # Window Settings
 WINDOW_WIDTH = 1600
