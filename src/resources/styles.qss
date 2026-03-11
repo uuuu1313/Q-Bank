@@ -1,0 +1,206 @@
+/* Modern Stylesheet for Math Answer Note Application */
+
+QMainWindow {
+    background-color: #ffffff;
+}
+
+/* General Styling */
+QWidget {
+    background-color: #ffffff;
+    color: #333333;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 10pt;
+}
+
+/* Labels */
+QLabel {
+    color: #333333;
+}
+
+/* ComboBox (Dropdown) */
+QComboBox {
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #ffffff;
+    color: #333333;
+    selection-background-color: #4CAF50;
+}
+
+QComboBox::drop-down {
+    border: none;
+}
+
+QComboBox::down-arrow {
+    image: none;
+}
+
+QComboBox:hover {
+    border: 2px solid #4CAF50;
+}
+
+QComboBox:focus {
+    border: 2px solid #4CAF50;
+    background-color: #f5f5f5;
+}
+
+/* ComboBox Dropdown Items */
+QComboBox QAbstractItemView {
+    border: 1px solid #ddd;
+    background-color: #ffffff;
+    color: #333333;
+    selection-background-color: #4CAF50;
+    outline: none;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+QPushButton:hover {
+    background-color: #45a049;
+}
+
+QPushButton:pressed {
+    background-color: #3d8b40;
+}
+
+QPushButton:disabled {
+    background-color: #cccccc;
+    color: #666666;
+}
+
+/* List Widget */
+QListWidget {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #ffffff;
+    color: #333333;
+    outline: none;
+}
+
+QListWidget::item {
+    padding: 5px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+QListWidget::item:selected {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+QListWidget::item:hover {
+    background-color: #f5f5f5;
+}
+
+/* CheckBox */
+QCheckBox {
+    spacing: 5px;
+    color: #333333;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ddd;
+    border-radius: 3px;
+    background-color: #ffffff;
+}
+
+QCheckBox::indicator:hover {
+    border: 2px solid #4CAF50;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #4CAF50;
+    border: 2px solid #4CAF50;
+    image: url(:/icons/check.png);
+}
+
+/* Frame */
+QFrame {
+    border: none;
+    background-color: transparent;
+}
+
+/* Status Bar */
+QStatusBar {
+    background-color: #f9f9f9;
+    color: #666666;
+    border-top: 1px solid #ddd;
+}
+
+/* Separator (HLine) */
+QFrame[frameShape="4"] {
+    color: #ddd;
+}
+
+/* Scrollbar */
+QScrollBar:vertical {
+    border: none;
+    background-color: #ffffff;
+    width: 12px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #bbb;
+    border-radius: 6px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #999;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+}
+
+QScrollBar:horizontal {
+    border: none;
+    background-color: #ffffff;
+    height: 12px;
+    margin: 0px;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #bbb;
+    border-radius: 6px;
+    min-width: 20px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: #999;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    border: none;
+    background: none;
+}
+
+/* Dialog */
+QDialog {
+    background-color: #ffffff;
+}
+
+/* Input Fields */
+QLineEdit, QTextEdit, QPlainTextEdit {
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 5px;
+    background-color: #ffffff;
+    color: #333333;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+    border: 2px solid #4CAF50;
+}

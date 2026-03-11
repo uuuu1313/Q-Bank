@@ -1,0 +1,5 @@
+PyQt5==5.15.9
+PyQt5-sip==12.13.0
+Pillow==10.0.0
+reportlab==4.0.0
+PyInstaller==6.1.0

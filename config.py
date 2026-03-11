@@ -1,0 +1,43 @@
+"""
+Configuration file for Math Answer Note Program
+"""
+
+import os
+from pathlib import Path
+
+# Application Information
+APP_NAME = "수학 오답노트"
+APP_VERSION = "1.0.0"
+APP_AUTHOR = "Math Program"
+
+# Window Settings
+WINDOW_WIDTH = 1600
+WINDOW_HEIGHT = 1200
+WINDOW_MIN_WIDTH = 900
+WINDOW_MIN_HEIGHT = 600
+
+# User Data Path (Default: user_data folder in project root)
+PROJECT_ROOT = Path(__file__).parent
+USER_DATA_ROOT = PROJECT_ROOT / "user_data"
+
+# Ensure user_data directory exists
+USER_DATA_ROOT.mkdir(exist_ok=True)
+
+# File Settings
+SUPPORTED_IMAGE_FORMATS = ['.png', '.jpg', '.jpeg']
+DEFAULT_SAVE_LOCATION = os.path.expanduser("~/Desktop")
+
+# PDF Settings
+PDF_PAGE_SIZE = "A4"  # A4 page size
+PDF_MARGIN = 50  # pixels
+PDF_QUALITY = 100  # image quality percentage
+
+# UI Settings
+THEME = "light"  # light or dark
+FONT_FAMILY = "Noto Sans KR"
+FONT_SIZE = 10
+
+# Application Paths
+RESOURCES_PATH = PROJECT_ROOT / "src" / "resources"
+STYLES_PATH = RESOURCES_PATH / "styles.qss"
+ICONS_PATH = RESOURCES_PATH / "icons"
