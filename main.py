@@ -17,6 +17,7 @@ def main():
     # Noto Sans KR 폰트 로드 (프로젝트에 번들링된 ttf 파일)
     font_path = str(config.RESOURCES_PATH / "fonts" / "NotoSansKR-Regular.ttf")
     font_id = QFontDatabase.addApplicationFont(font_path)
+
     if font_id != -1:
         app.setFont(QFont(config.FONT_FAMILY, config.FONT_SIZE))
 

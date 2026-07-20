@@ -40,22 +40,18 @@ TEXT_PLACEHOLDER = "#888"
 TEXT_DISABLED = "#bbb"
 
 # ──────────────────────────────────────────────
-# 폰트 크기 (pt 단위, QFont에서 사용)
+# 폰트 크기 (px 단위, 모두 QSS에서 사용)
 # ──────────────────────────────────────────────
-FONT_SIZE_TITLE_BAR = 14       # 타이틀바 앱 이름
-FONT_SIZE_SECTION_TITLE = 18   # 사이드바 섹션 제목 ("문제 DB 폴더")
-FONT_SIZE_MAIN_TITLE = 18      # 메인 영역 제목 ("문제 선택")
-
-# ──────────────────────────────────────────────
-# 폰트 크기 (px 단위, QSS에서 사용)
-# ──────────────────────────────────────────────
-FONT_PX_COMBO = 25            # 콤보박스 텍스트
-FONT_PX_MENU_ITEM = 25        # 드롭다운 메뉴 아이템
+FONT_PX_TITLE_BAR = 29         # 타이틀바 앱 이름
+FONT_PX_SECTION_TITLE = 28     # 사이드바 섹션 제목 ("Root dir")
+FONT_PX_MAIN_TITLE = 28        # 메인 영역 제목 ("문제 선택")
+FONT_PX_COMBO = 24            # 콤보박스 텍스트
+FONT_PX_MENU_ITEM = 22        # 드롭다운 메뉴 아이템
 FONT_PX_BUTTON = 28           # 버튼 텍스트
-FONT_PX_TOOLBAR_BTN = 23      # 전체선택/해제 버튼
+FONT_PX_TOOLBAR_BTN = 25      # 전체선택/해제 버튼
 FONT_PX_BADGE = 22            # 선택됨 뱃지
-FONT_PX_PATH_LABEL = 22       # 경로 표시 라벨
-FONT_PX_STATUS_BAR = 25       # 상태바
+FONT_PX_PATH_LABEL = 24       # 경로 표시 라벨
+FONT_PX_STATUS_BAR = 27       # 상태바
 
 
 # ──────────────────────────────────────────────
@@ -76,7 +72,7 @@ HEADER = f"""
     }}
 """
 
-HEADER_TITLE = "color: white; background: transparent;"
+HEADER_TITLE = f"color: white; background: transparent; font-size: {FONT_PX_TITLE_BAR}px; font-weight: bold;"
 
 HEADER_VERSION = "color: rgba(255,255,255,0.6); background: transparent; margin-right: 12px;"
 
@@ -107,7 +103,7 @@ SIDEBAR = f"""
 """
 
 # 사이드바 섹션 제목 라벨
-SECTION_LABEL = f"color: {TEXT_PRIMARY}; border: none;"
+SECTION_LABEL = f"color: {TEXT_PRIMARY}; border: none; font-size: {FONT_PX_SECTION_TITLE}px; font-weight: bold;"
 
 # 루트 경로 표시 라벨
 PATH_LABEL = f"""
@@ -216,7 +212,7 @@ MAIN_AREA = f"""
 """
 
 # 메인 영역 제목 라벨
-MAIN_TITLE = f"color: {TEXT_PRIMARY}; border: none;"
+MAIN_TITLE = f"color: {TEXT_PRIMARY}; border: none; background-color: white; font-size: {FONT_PX_MAIN_TITLE}px; font-weight: bold;"
 
 # 선택됨 뱃지
 SELECTION_BADGE = f"""
@@ -245,25 +241,28 @@ BTN_TOOLBAR = f"""
     }}
 """
 
-# 문제 목록
+# 문제 목록 스크롤 영역
 PROBLEM_LIST = f"""
-    QListWidget {{
+    QScrollArea {{
         border: 1px solid {BORDER};
         border-radius: 6px;
         background-color: #fafbfc;
-        outline: none;
     }}
-    QListWidget::item {{
-        padding: 10px 12px;
-        border-bottom: 1px solid #f0f0f0;
+    QScrollArea > QWidget > QWidget {{
+        background-color: #fafbfc;
+    }}
+"""
+
+# 문제 개별 체크박스
+PROBLEM_ITEM = f"""
+    QCheckBox {{
+        padding: 10px 8px;
         color: {TEXT_PRIMARY};
+        spacing: 6px;
     }}
-    QListWidget::item:hover {{
+    QCheckBox:hover {{
         background-color: {PRIMARY_LIGHT};
-    }}
-    QListWidget::item:selected {{
-        background-color: #d2e3fc;
-        color: {PRIMARY};
+        border-radius: 4px;
     }}
 """
 

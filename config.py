@@ -18,10 +18,15 @@ WINDOW_MIN_HEIGHT = 600
 
 # User Data Path (Default: user_data folder in project root)
 PROJECT_ROOT = Path(__file__).parent
-USER_DATA_ROOT = PROJECT_ROOT / "user_data"
 
-# Ensure user_data directory exists
-USER_DATA_ROOT.mkdir(exist_ok=True)
+# 테스트용 DB 폴더가 존재하면 우선 사용
+_TEST_DB_PATH = Path(r"C:\Users\JIUK\Desktop\math_test_db")
+if _TEST_DB_PATH.exists():
+    USER_DATA_ROOT = _TEST_DB_PATH
+else:
+    USER_DATA_ROOT = PROJECT_ROOT / "user_data"
+    # Ensure user_data directory exists
+    USER_DATA_ROOT.mkdir(exist_ok=True)
 
 # File Settings
 SUPPORTED_IMAGE_FORMATS = ['.png', '.jpg', '.jpeg']

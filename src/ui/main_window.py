@@ -2,11 +2,14 @@
 메인 윈도우 - 수학 오답노트 프로그램의 메인 화면
 """
 import sys
+import ctypes
+import ctypes.wintypes
 from pathlib import Path
 from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QComboBox, QPushButton, QListWidget, QListWidgetItem,
-    QCheckBox, QStatusBar, QFrame, QFileDialog, QMessageBox, QMenu
+    QCheckBox, QStatusBar, QFrame, QFileDialog, QMessageBox, QMenu,
+    QScrollArea, QSizePolicy
 )
 from PyQt5.QtCore import Qt, QPoint, QRect, QSize
 from PyQt5.QtGui import QFont, QPainter, QPolygon, QColor, QCursor
@@ -55,13 +58,15 @@ class RightPopupComboBox(QComboBox):
             return
 
         menu = QMenu(self)
+        menu.setWindowFlags(menu.windowFlags() | Qt.NoDropShadowWindowHint)
         menu.setStyleSheet(S.COMBOBOX_MENU)
 
         for i in range(self.count()):
             action = menu.addAction(self.itemText(i))
             action.setData(i)
 
-        pos = self.mapToGlobal(QPoint(self.width() + 2, 0))
+        menu.setMinimumWidth(450)  # 콤보박스와 같은 너비 이상 확보
+        pos = self.mapToGlobal(QPoint(self.width() + 10, 0))
         selected = menu.exec_(pos)
         if selected is not None:
             self.setCurrentIndex(selected.data())
@@ -70,19 +75,18 @@ class RightPopupComboBox(QComboBox):
 class MainWindow(QMainWindow):
     """메인 애플리케이션 윈도우"""
 
-    RESIZE_MARGIN = 6
+    RESIZE_MARGIN = 8
 
     def __init__(self):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.setMouseTracking(True)
 
         self.setGeometry(100, 100, config.WINDOW_WIDTH, config.WINDOW_HEIGHT)
         self.setMinimumSize(config.WINDOW_MIN_WIDTH, config.WINDOW_MIN_HEIGHT)
 
         self._drag_pos = None
-        self._resizing = False
-        self._resize_dir = None
 
         self.file_manager = FileManager()
 
@@ -91,7 +95,6 @@ class MainWindow(QMainWindow):
         self.current_chapter = None
 
         self._is_maximized = False
-        self._normal_geometry = None
 
         self.init_ui()
         self.connect_signals()
@@ -100,6 +103,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(S.MAIN_WINDOW)
 
         central_widget = QWidget()
+        central_widget.setMouseTracking(True)
         self.setCentralWidget(central_widget)
 
         outer_layout = QVBoxLayout(central_widget)
@@ -138,7 +142,6 @@ class MainWindow(QMainWindow):
         header_layout.setSpacing(6)
 
         title = QLabel(config.APP_NAME)
-        title.setFont(QFont(config.FONT_FAMILY, S.FONT_SIZE_TITLE_BAR, QFont.Bold))
         title.setStyleSheet(S.HEADER_TITLE)
         header_layout.addWidget(title)
 
@@ -176,17 +179,9 @@ class MainWindow(QMainWindow):
 
     def toggle_maximize(self):
         if self._is_maximized:
-            if self._normal_geometry:
-                self.setGeometry(self._normal_geometry)
-            self._is_maximized = False
-            self.btn_maximize.setText("□")
+            self.showNormal()
         else:
-            self._normal_geometry = self.geometry()
-            from PyQt5.QtWidgets import QDesktopWidget
-            screen = QDesktopWidget().availableGeometry(self)
-            self.setGeometry(screen)
-            self._is_maximized = True
-            self.btn_maximize.setText("❐")
+            self.showMaximized()
 
     # ──────────────────────────────────────────────
     # 사이드바
@@ -194,16 +189,15 @@ class MainWindow(QMainWindow):
     def create_sidebar(self):
         sidebar_frame = QFrame()
         sidebar_frame.setObjectName("sidebar")
-        sidebar_frame.setMinimumWidth(300)
-        sidebar_frame.setMaximumWidth(300)
+        sidebar_frame.setMinimumWidth(400)
+        sidebar_frame.setMaximumWidth(400)
         sidebar_frame.setStyleSheet(S.SIDEBAR)
 
         sidebar_layout = QVBoxLayout(sidebar_frame)
         sidebar_layout.setContentsMargins(18, 18, 18, 18)
         sidebar_layout.setSpacing(14)
 
-        root_label = QLabel("문제 DB 폴더")
-        root_label.setFont(QFont(config.FONT_FAMILY, S.FONT_SIZE_SECTION_TITLE, QFont.Bold))
+        root_label = QLabel("Root Dir")
         root_label.setStyleSheet(S.SECTION_LABEL)
         sidebar_layout.addWidget(root_label)
 
@@ -213,7 +207,7 @@ class MainWindow(QMainWindow):
         sidebar_layout.addWidget(self.root_path_label)
 
         self.select_root_btn = QPushButton("폴더 선택")
-        self.select_root_btn.setMinimumHeight(38)
+        self.select_root_btn.setMinimumHeight(45)
         self.select_root_btn.setCursor(Qt.PointingHandCursor)
         self.select_root_btn.setStyleSheet(S.BTN_PRIMARY)
         sidebar_layout.addWidget(self.select_root_btn)
@@ -268,7 +262,7 @@ class MainWindow(QMainWindow):
         # 헤더
         header_layout = QHBoxLayout()
         self.chapter_title = QLabel("문제 선택")
-        self.chapter_title.setFont(QFont(config.FONT_FAMILY, S.FONT_SIZE_MAIN_TITLE, QFont.Bold))
+        self.chapter_title.setMinimumHeight(40)
         self.chapter_title.setStyleSheet(S.MAIN_TITLE)
         header_layout.addWidget(self.chapter_title)
         header_layout.addStretch()
@@ -294,26 +288,30 @@ class MainWindow(QMainWindow):
         toolbar_layout.addStretch()
         main_layout.addLayout(toolbar_layout)
 
-        # 문제 목록
-        self.problem_list = QListWidget()
-        self.problem_list.setStyleSheet(S.PROBLEM_LIST)
-        main_layout.addWidget(self.problem_list)
+        # 문제 목록 (5열 그리드)
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet(S.PROBLEM_LIST)
 
-        # 액션 버튼
+        self.problem_grid_widget = QWidget()
+        self.problem_grid = QGridLayout(self.problem_grid_widget)
+        self.problem_grid.setSpacing(6)
+        self.problem_grid.setContentsMargins(8, 8, 8, 8)
+        scroll_area.setWidget(self.problem_grid_widget)
+        main_layout.addWidget(scroll_area)
+
+        self.problem_checkboxes = []
+
+        # 출력 버튼
         button_layout = QHBoxLayout()
-        button_layout.setSpacing(10)
-
-        action_buttons = [
-            ("미리보기", S.BTN_PREVIEW),
-            ("출력", S.BTN_PRINT),
-            ("저장", S.BTN_SAVE),
-        ]
-        for text, style in action_buttons:
-            btn = QPushButton(text)
-            btn.setMinimumHeight(42)
-            btn.setCursor(Qt.PointingHandCursor)
-            btn.setStyleSheet(style)
-            button_layout.addWidget(btn)
+        button_layout.addStretch()
+        self.print_btn = QPushButton("노트 생성")
+        self.print_btn.setMinimumHeight(50)
+        self.print_btn.setCursor(Qt.PointingHandCursor)
+        self.print_btn.setStyleSheet(S.BTN_PRINT)
+        self.print_btn.setMinimumWidth(300)
+        button_layout.addWidget(self.print_btn)
+        button_layout.addStretch()
         main_layout.addLayout(button_layout)
 
         return main_frame
@@ -334,6 +332,7 @@ class MainWindow(QMainWindow):
         self.chapter_combo.currentIndexChanged.connect(self.on_chapter_changed)
         self.select_all_btn.clicked.connect(self.on_select_all)
         self.deselect_all_btn.clicked.connect(self.on_deselect_all)
+        self.print_btn.clicked.connect(self.on_create_note)
 
     # ──────────────────────────────────────────────
     # 이벤트 핸들러
@@ -415,14 +414,19 @@ class MainWindow(QMainWindow):
             self.current_course, self.current_textbook, self.current_chapter
         )
 
-        self.chapter_title.setText(f"문제 선택 (단원: {self.current_chapter})")
+        cols = 5
+        for i, problem_name in enumerate(problems):
+            cb = QCheckBox(Path(problem_name).stem)
+            cb.setProperty("filename", problem_name)
+            cb.setStyleSheet(S.PROBLEM_ITEM)
+            cb.setCursor(Qt.PointingHandCursor)
+            cb.stateChanged.connect(lambda: self._update_selection_count())
+            self.problem_checkboxes.append(cb)
+            self.problem_grid.addWidget(cb, i // cols, i % cols)
 
-        for problem_name in problems:
-            item = QListWidgetItem()
-            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-            item.setCheckState(Qt.Unchecked)
-            item.setText(problem_name)
-            self.problem_list.addItem(item)
+        # 남은 공간을 아래로 밀어서 위쪽 정렬
+        next_row = (len(problems) + cols - 1) // cols
+        self.problem_grid.setRowStretch(next_row, 1)
 
         self._update_selection_count()
         self.statusBar().showMessage(f"단원: {self.current_chapter} ({len(problems)}개 문제)")
@@ -431,14 +435,39 @@ class MainWindow(QMainWindow):
     # 전체선택 / 전체해제
     # ──────────────────────────────────────────────
     def on_select_all(self):
-        for i in range(self.problem_list.count()):
-            self.problem_list.item(i).setCheckState(Qt.Checked)
-        self._update_selection_count()
+        for cb in self.problem_checkboxes:
+            cb.setChecked(True)
 
     def on_deselect_all(self):
-        for i in range(self.problem_list.count()):
-            self.problem_list.item(i).setCheckState(Qt.Unchecked)
-        self._update_selection_count()
+        for cb in self.problem_checkboxes:
+            cb.setChecked(False)
+
+    def on_create_note(self):
+        checked = [cb for cb in self.problem_checkboxes if cb.isChecked()]
+        if not checked:
+            self.statusBar().showMessage("문제를 선택해주세요")
+            return
+
+        image_paths = []
+        for cb in checked:
+            filename = cb.property("filename")
+            path = self.file_manager.get_problem_path(
+                self.current_course, self.current_textbook,
+                self.current_chapter, filename
+            )
+            image_paths.append(path)
+
+        header_info = {
+            "course": self.current_course,
+            "textbook": self.current_textbook,
+            "chapter": self.current_chapter,
+            "format": "horizontal",
+            "include_answer_sheet": True,
+        }
+
+        from src.utils.create_note import NotePreviewDialog
+        dialog = NotePreviewDialog(image_paths, header_info, self)
+        dialog.exec_()
 
     # ──────────────────────────────────────────────
     # 헬퍼 메서드
@@ -460,16 +489,17 @@ class MainWindow(QMainWindow):
         self.current_chapter = None
 
     def _clear_problem_list(self):
-        self.problem_list.clear()
-        self.chapter_title.setText("문제 선택")
+        for cb in self.problem_checkboxes:
+            cb.deleteLater()
+        self.problem_checkboxes.clear()
+        # stretch 리셋
+        for i in range(self.problem_grid.rowCount()):
+            self.problem_grid.setRowStretch(i, 0)
         self._update_selection_count()
 
     def _update_selection_count(self):
-        total = self.problem_list.count()
-        checked = sum(
-            1 for i in range(total)
-            if self.problem_list.item(i).checkState() == Qt.Checked
-        )
+        total = len(self.problem_checkboxes)
+        checked = sum(1 for cb in self.problem_checkboxes if cb.isChecked())
         self.selection_label.setText(f"선택됨: {checked}/{total}")
 
     def _add_separator(self, layout):
@@ -484,105 +514,68 @@ class MainWindow(QMainWindow):
     def _is_on_header(self, pos):
         return self._header.geometry().contains(pos)
 
-    def _get_resize_direction(self, pos):
-        m = self.RESIZE_MARGIN
-        rect = self.rect()
-        x, y = pos.x(), pos.y()
+    def nativeEvent(self, eventType, message):
+        """Windows WM_NCHITTEST를 처리하여 창 리사이즈 및 드래그 이동을 지원합니다."""
+        if eventType == b"windows_generic_MSG":
+            msg = ctypes.wintypes.MSG.from_address(int(message))
+            if msg.message == 0x0084:  # WM_NCHITTEST
+                pos = self.mapFromGlobal(QPoint(
+                    ctypes.c_short(msg.lParam & 0xFFFF).value,
+                    ctypes.c_short((msg.lParam >> 16) & 0xFFFF).value,
+                ))
+                x, y = pos.x(), pos.y()
+                w, h = self.width(), self.height()
+                m = self.RESIZE_MARGIN
 
-        left = x < m
-        right = x > rect.width() - m
-        top = y < m
-        bottom = y > rect.height() - m
+                if not self._is_maximized:
+                    # 코너
+                    if x < m and y < m:
+                        return True, 13  # HTTOPLEFT
+                    if x > w - m and y < m:
+                        return True, 14  # HTTOPRIGHT
+                    if x < m and y > h - m:
+                        return True, 16  # HTBOTTOMLEFT
+                    if x > w - m and y > h - m:
+                        return True, 17  # HTBOTTOMRIGHT
+                    # 엣지
+                    if x < m:
+                        return True, 10  # HTLEFT
+                    if x > w - m:
+                        return True, 11  # HTRIGHT
+                    if y < m:
+                        return True, 12  # HTTOP
+                    if y > h - m:
+                        return True, 15  # HTBOTTOM
 
-        if top and left:     return "top-left"
-        if top and right:    return "top-right"
-        if bottom and left:  return "bottom-left"
-        if bottom and right: return "bottom-right"
-        if left:             return "left"
-        if right:            return "right"
-        if top:              return "top"
-        if bottom:           return "bottom"
-        return None
+                # 헤더 영역 → 타이틀바 드래그 (버튼 영역 제외)
+                if self._is_on_header(pos):
+                    for btn in (self.btn_minimize, self.btn_maximize, self.btn_close):
+                        btn_rect = btn.geometry()
+                        btn_pos = btn.parentWidget().mapTo(self, btn_rect.topLeft())
+                        mapped = QRect(btn_pos, btn_rect.size())
+                        if mapped.contains(pos):
+                            return False, 0  # Qt가 버튼 클릭을 처리
+                    return True, 2  # HTCAPTION
 
-    def _get_resize_cursor(self, direction):
-        cursors = {
-            "left": Qt.SizeHorCursor,
-            "right": Qt.SizeHorCursor,
-            "top": Qt.SizeVerCursor,
-            "bottom": Qt.SizeVerCursor,
-            "top-left": Qt.SizeFDiagCursor,
-            "bottom-right": Qt.SizeFDiagCursor,
-            "top-right": Qt.SizeBDiagCursor,
-            "bottom-left": Qt.SizeBDiagCursor,
-        }
-        return cursors.get(direction, Qt.ArrowCursor)
+        return super().nativeEvent(eventType, message)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            direction = self._get_resize_direction(event.pos())
-            if direction and not self._is_maximized:
-                self._resizing = True
-                self._resize_dir = direction
-                self._drag_pos = event.globalPos()
-                self._start_geometry = self.geometry()
-                return
-
-            if self._is_on_header(event.pos()):
-                self._drag_pos = event.globalPos() - self.frameGeometry().topLeft()
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        if self._resizing and self._resize_dir:
-            diff = event.globalPos() - self._drag_pos
-            geo = QRect(self._start_geometry)
-            min_w, min_h = self.minimumWidth(), self.minimumHeight()
-
-            d = self._resize_dir
-            if "right" in d:
-                geo.setWidth(max(min_w, self._start_geometry.width() + diff.x()))
-            if "bottom" in d:
-                geo.setHeight(max(min_h, self._start_geometry.height() + diff.y()))
-            if "left" in d:
-                new_w = self._start_geometry.width() - diff.x()
-                if new_w >= min_w:
-                    geo.setLeft(self._start_geometry.left() + diff.x())
-            if "top" in d:
-                new_h = self._start_geometry.height() - diff.y()
-                if new_h >= min_h:
-                    geo.setTop(self._start_geometry.top() + diff.y())
-
-            self.setGeometry(geo)
-            return
-
-        if self._drag_pos and not self._resizing:
-            if self._is_maximized:
-                self._is_maximized = False
-                self.btn_maximize.setText("□")
-                if self._normal_geometry:
-                    ratio = event.globalPos().x() / self.width()
-                    self.setGeometry(self._normal_geometry)
-                    new_x = event.globalPos().x() - int(self.width() * ratio)
-                    self.move(new_x, event.globalPos().y() - 24)
-                    self._drag_pos = event.globalPos() - self.frameGeometry().topLeft()
-            else:
-                self.move(event.globalPos() - self._drag_pos)
-            return
-
-        if not self._is_maximized:
-            direction = self._get_resize_direction(event.pos())
-            if direction:
-                self.setCursor(self._get_resize_cursor(direction))
-            else:
-                self.unsetCursor()
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        self._drag_pos = None
-        self._resizing = False
-        self._resize_dir = None
         super().mouseReleaseEvent(event)
 
-    def mouseDoubleClickEvent(self, event):
-        if event.button() == Qt.LeftButton and self._is_on_header(event.pos()):
-            self.toggle_maximize()
-        super().mouseDoubleClickEvent(event)
+    def changeEvent(self, event):
+        """OS 최대화/복원 이벤트와 커스텀 상태를 동기화합니다."""
+        from PyQt5.QtCore import QEvent
+        if event.type() == QEvent.WindowStateChange:
+            if self.windowState() & Qt.WindowMaximized:
+                self._is_maximized = True
+                self.btn_maximize.setText("❐")
+            elif not (self.windowState() & Qt.WindowMinimized):
+                self._is_maximized = False
+                self.btn_maximize.setText("□")
+        super().changeEvent(event)
