@@ -1,0 +1,55 @@
+name: Build QBank
+
+# 태그 push 또는 수동 실행 시 Windows/macOS 실행 파일을 동시에 빌드
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: QBank-windows
+            zip: QBank-windows.zip
+          - os: macos-latest      # Apple Silicon 러너 → arm64 .app 생성
+            artifact: QBank-macos
+            zip: QBank-macos.zip
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build with PyInstaller
+        run: pyinstaller --noconfirm --clean QBank.spec
+
+      # macOS: .app 번들은 내부 심볼릭 링크가 있어 ditto로 압축해야 실행 가능한 상태가 유지됨
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: ditto -c -k --keepParent dist/QBank.app "${{ matrix.zip }}"
+
+      # Windows: 단일 exe 압축
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path dist/QBank.exe -DestinationPath "${{ matrix.zip }}" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.zip }}
