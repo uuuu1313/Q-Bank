@@ -16,7 +16,10 @@ jobs:
           - os: windows-latest
             artifact: QBank-windows
             zip: QBank-windows.zip
-          - os: macos-latest      # Apple Silicon 러너 → arm64 .app 생성
+          # Intel(x86_64) 러너 사용: PyQt5 5.15.9의 arm64 wheel이 없어
+          # macos-latest(arm64)에선 소스 컴파일→qmake 부재로 실패함.
+          # x86_64 빌드는 Intel + Apple Silicon(Rosetta 2) 모두에서 실행됨.
+          - os: macos-13
             artifact: QBank-macos
             zip: QBank-macos.zip
     runs-on: ${{ matrix.os }}
