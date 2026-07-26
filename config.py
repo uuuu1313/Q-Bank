@@ -3,6 +3,7 @@ Configuration file for Math Answer Note Program
 """
 
 import os
+import sys
 from pathlib import Path
 
 # Application Information
@@ -18,6 +19,16 @@ WINDOW_MIN_HEIGHT = 600
 
 # User Data Path (Default: user_data folder in project root)
 PROJECT_ROOT = Path(__file__).parent
+
+
+def resource_path(*parts):
+    """번들 리소스의 절대 경로 반환.
+
+    개발 실행 시엔 프로젝트 루트를, PyInstaller로 얼린 exe에선
+    임시 추출 경로(sys._MEIPASS)를 기준으로 한다.
+    """
+    base = Path(getattr(sys, "_MEIPASS", PROJECT_ROOT))
+    return base.joinpath(*parts)
 
 # 테스트용 DB 폴더가 존재하면 우선 사용
 _TEST_DB_PATH = Path(r"C:\Users\JIUK\Desktop\math_test_db")
@@ -46,3 +57,6 @@ FONT_SIZE = 10
 RESOURCES_PATH = PROJECT_ROOT / "src" / "resources"
 STYLES_PATH = RESOURCES_PATH / "styles.qss"
 ICONS_PATH = RESOURCES_PATH / "icons"
+
+# 앱 아이콘 (template/icon/QB_icon.png) - 개발/exe 모두 대응
+APP_ICON = resource_path("template", "icon", "QB_icon.png")
